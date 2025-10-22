@@ -1,35 +1,18 @@
 import { useState } from 'react';
-import { Shield, AlertTriangle, Loader, TrendingDown, Check, X } from 'lucide-react';
+import { Shield, AlertTriangle, TrendingDown, Check } from 'lucide-react';
 import api from '../utils/api';
 
-const HealthRiskAnalysis = ({ scanId, onAnalysisComplete }) => {
+const HealthRiskRating = ({ scanId, initialResults }) => {
   const [riskData, setRiskData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const analyzeRisk = async () => {
-    if (!scanId) {
-      setError('No scan ID provided. Please scan a product first.');
-      return;
-    }
-
     setLoading(true);
-    setError('');
-
     try {
-      const { data } = await api.post('/ai/risk', { scanId });
+      const { data } = await api.post('/risk/analyze', { scanId });
       setRiskData(data);
-      
-      if (onAnalysisComplete) {
-        onAnalysisComplete(data);
-      }
     } catch (err) {
-      console.error('Risk analysis error:', err);
-      setError(
-        err.response?.data?.message || 
-        err.message ||
-        'Failed to analyze health risk. Please try again.'
-      );
+      alert('Failed to analyze health risk');
     } finally {
       setLoading(false);
     }
@@ -42,81 +25,45 @@ const HealthRiskAnalysis = ({ scanId, onAnalysisComplete }) => {
       orange: 'from-orange-500 to-red-500 border-orange-300',
       red: 'from-red-500 to-pink-500 border-red-300',
     };
-    return colors[color] || colors.yellow;
+    return colors[color] || colors.green;
   };
 
   return (
     <div className="bg-white rounded-2xl shadow-xl p-6">
       <div className="flex items-center space-x-3 mb-6">
         <Shield className="w-8 h-8 text-indigo-600" />
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">AI Health Risk Analysis</h2>
-          <p className="text-sm text-gray-600">Powered by Google Gemini AI</p>
-        </div>
+        <h2 className="text-2xl font-bold text-gray-800">AI Health Risk Rating</h2>
       </div>
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-start space-x-3">
-          <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="text-red-700 font-medium">{error}</p>
-            <p className="text-red-600 text-sm mt-1">
-              Make sure you have scanned a product first, then try analyzing again.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {!riskData && !loading && (
+      {!riskData ? (
         <div className="text-center py-12">
           <Shield className="w-20 h-20 mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-600 mb-6">
-            {scanId 
-              ? 'Get AI-powered personalized health risk analysis for this product'
-              : 'Scan a product first to analyze health risks'
-            }
-          </p>
+          <p className="text-gray-600 mb-6">Get AI-powered personalized health risk analysis</p>
           <button
             onClick={analyzeRisk}
-            disabled={loading || !scanId}
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            disabled={loading}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition disabled:opacity-50"
           >
-            {scanId ? 'Analyze Health Risk' : 'Scan Product First'}
+            {loading ? 'Analyzing...' : 'Analyze Health Risk'}
           </button>
         </div>
-      )}
-
-      {loading && (
-        <div className="text-center py-12">
-          <Loader className="w-12 h-12 mx-auto text-indigo-600 animate-spin mb-4" />
-          <p className="text-gray-600 font-medium">AI is analyzing health risks...</p>
-          <p className="text-sm text-gray-500 mt-2">This may take 10-15 seconds</p>
-        </div>
-      )}
-
-      {riskData && !loading && (
-        <div className="space-y-6 animate-fadeIn">
+      ) : (
+        <div className="space-y-6">
           {/* Risk Score Card */}
-          <div className={`bg-gradient-to-r ${getRiskColorClasses(riskData.riskColor)} border-4 rounded-2xl p-8 text-white shadow-2xl`}>
+          <div className={`bg-gradient-to-r ${getRiskColorClasses(riskData.riskColor)} border-4 rounded-2xl p-8 text-white`}>
             <div className="text-center">
               <div className="text-6xl font-bold mb-2">{riskData.riskScore}</div>
               <div className="text-2xl font-semibold mb-1">Risk Score</div>
-              <div className="text-lg opacity-90 capitalize">{riskData.riskLevel} Risk Level</div>
+              <div className="text-lg opacity-90">{riskData.riskLevel} Risk Level</div>
             </div>
             
             <div className="mt-6 flex justify-center">
-              <div className="bg-white bg-opacity-20 rounded-full px-6 py-2 backdrop-blur-sm">
+              <div className="bg-white bg-opacity-20 rounded-full px-6 py-2">
                 <div className="text-sm font-medium">
                   Safety Rating: {riskData.safetyRating}/100
                 </div>
               </div>
             </div>
-
-            {riskData.cached && (
-              <div className="mt-4 text-center text-xs opacity-75">
-                📦 Cached result - instant response
-              </div>
-            )}
           </div>
 
           {/* Risk Factors */}
@@ -138,61 +85,58 @@ const HealthRiskAnalysis = ({ scanId, onAnalysisComplete }) => {
           )}
 
           {/* Recommendations */}
-          {riskData.recommendations && riskData.recommendations.length > 0 && (
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Check className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-bold text-blue-900">AI Recommendations</h3>
-              </div>
-              <ul className="space-y-2">
-                {riskData.recommendations.map((rec, idx) => (
-                  <li key={idx} className="flex items-start space-x-2 text-blue-800">
-                    <span className="text-blue-600 font-bold mt-0.5">✓</span>
-                    <span>{rec}</span>
-                  </li>
-                ))}
-              </ul>
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Check className="w-6 h-6 text-blue-600" />
+              <h3 className="text-lg font-bold text-blue-900">Recommendations</h3>
             </div>
-          )}
-
-          {/* Long Term Effects */}
-          {riskData.longTermEffects && (
-            <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-purple-900 mb-3">Long-Term Health Impact</h3>
-              <p className="text-purple-800">{riskData.longTermEffects}</p>
-            </div>
-          )}
+            <ul className="space-y-2">
+              {riskData.recommendations.map((rec, idx) => (
+                <li key={idx} className="flex items-start space-x-2 text-blue-800">
+                  <span className="text-blue-600 font-bold mt-0.5">✓</span>
+                  <span>{rec}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+              {/* AI Insights Section */}
+{riskData.aiInsights && (
+  <div className="bg-gray-50 border-2 border-gray-200 rounded-xl p-6">
+    <h3 className="text-lg font-bold text-gray-900 mb-4">AI Ingredient Insights</h3>
+    <ul className="space-y-2">
+      {riskData.aiInsights.map((insight, idx) => (
+        <li key={idx} className="border-b pb-2">
+          <span className="font-semibold">{insight.name}</span> — 
+          <span className="text-sm italic text-gray-700"> {insight.reason}</span>
+          <span className={`ml-2 text-xs px-2 py-1 rounded-full ${
+            insight.riskLevel === 'Critical'
+              ? 'bg-red-500 text-white'
+              : insight.riskLevel === 'High'
+              ? 'bg-orange-500 text-white'
+              : insight.riskLevel === 'Moderate'
+              ? 'bg-yellow-400 text-gray-900'
+              : 'bg-green-400 text-gray-900'
+          }`}>
+            {insight.riskLevel}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </div>
+)}
 
           {/* Reanalyze Button */}
-          <div className="flex space-x-3">
-            <button
-              onClick={analyzeRisk}
-              disabled={loading}
-              className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition shadow-lg"
-            >
-              Reanalyze Risk
-            </button>
-            {onAnalysisComplete && (
-              <button
-                onClick={() => setRiskData(null)}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          {/* AI Provider Badge */}
-          <div className="text-center">
-            <span className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-indigo-100 to-purple-100 border-2 border-indigo-200 rounded-full text-sm font-semibold text-indigo-800">
-              <span>🤖</span>
-              <span>Analyzed by {riskData.aiProvider || 'Gemini AI'}</span>
-            </span>
-          </div>
+          <button
+            onClick={analyzeRisk}
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition"
+          >
+            Reanalyze Risk
+          </button>
         </div>
       )}
     </div>
-  );
+    );
 };
 
-export default HealthRiskAnalysis;
+export default HealthRiskRating;
