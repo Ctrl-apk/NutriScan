@@ -684,7 +684,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) file for 
 
 If you find NutriScan useful, please star the repository!
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/nutriscan-2.0&type=Date)](https://star-history.com/#yourusername/nutriscan-2.0&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=Ctrl-apk/nutriscan-2.0&type=Date)](https://star-history.com/#Ctrl-apk/nutriscan-2.0&Date)
 
 ---
 
