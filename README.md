@@ -688,4 +688,4 @@ If you find NutriScan useful, please star the repository!
 
 ---
 
-Made with ❤️ by the NutriScan Team
+Made with ❤️ by Shifa
