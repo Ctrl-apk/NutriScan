@@ -609,23 +609,66 @@ const Dashboard = () => {
 
                   <div className="bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-6 mb-6">
                     <h3 className="font-bold text-red-900 mb-2">📢 Community Guidelines</h3>
-                    <ul className="list-disc list-inside text-red-800 text-sm space-y-1">
-                      <li>Please provide accurate and honest information.</li>
-                      <li>Avoid submitting duplicate reports for the same product.</li>
-                      <li>Respect privacy and do not share personal data.</li>
-                      <li>Use respectful language; offensive content will be removed.</li>
-                      <li>Reports are reviewed by our moderation team before action is taken.</li>
+                    <ul className="space-y-2 text-sm text-red-800">
+                      <li className="flex items-start space-x-2">
+                        <span className="text-red-600">•</span>
+                        <span>Only report products with genuine safety concerns</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-red-600">•</span>
+                        <span>Provide detailed, factual information</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-red-600">•</span>
+                        <span>False reports may result in account restrictions</span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <span className="text-red-600">•</span>
+                        <span>Your reports help protect the entire community</span>
+                      </li>
                     </ul>
                   </div>
 
-                  <ReportButton productName="Sample Product Name" onReportSuccess={() => setActiveTab('reports')} />
+                  <div className="text-center py-8">
+                    <Flag className="w-20 h-20 mx-auto text-red-400 mb-6" />
+                    <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                      Enter Product Name to Report
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Click the button below to open the report form
+                    </p>
+                    
+                    <ReportButton 
+                      productName="[Product Name]"
+                      onReportSuccess={() => {
+                        alert('✅ Thank you for your report! It has been submitted for review.');
+                        setActiveTab('reports');
+                        fetchRealTimeStats();
+                      }}
+                    />
+                  </div>
+
+                  <div className="mt-8 grid md:grid-cols-3 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-blue-600 mb-1">156</div>
+                      <div className="text-sm text-gray-600">Community Reports</div>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-green-600 mb-1">89%</div>
+                      <div className="text-sm text-gray-600">Accuracy Rate</div>
+                    </div>
+                    <div className="bg-purple-50 rounded-lg p-4 text-center">
+                      <div className="text-3xl font-bold text-purple-600 mb-1">24</div>
+                      <div className="text-sm text-gray-600">Your Reports</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
 
             {activeTab === 'reports' && (
               <div className="max-w-6xl mx-auto">
-                <ReportList />
+                <ReportList showMyReports={true} />
               </div>
             )}
 

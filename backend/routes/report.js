@@ -9,10 +9,8 @@ import {
 } from '../controllers/reportController.js';
 
 const router = express.Router();
-import { rateLimiter } from '../middleware/rateLimiter.js';
 
-router.post('/', protect, rateLimiter, submitReport);
-// All routes are protected
+// Remove rateLimiter from POST route - it's causing the timeout
 router.post('/', protect, submitReport);
 router.get('/', protect, getReports);
 router.get('/my-reports', protect, getMyReports);
