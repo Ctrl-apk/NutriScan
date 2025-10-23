@@ -19,55 +19,42 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
-
-// Validate AI configuration (non-blocking)
-const aiConfigured = validateGeminiConfig();
-
-// Connect to database
 connectDB();
-
 const app = express();
 
+// Validate AI configuration
+const aiConfigured = validateGeminiConfig();
 
-const allowedOrigins = [
-  'http://localhost:3000', // local dev
-  'https://nutri-scan-ashen.vercel.app', // first Vercel frontend
-  'https://nutri-scan-git-master-ctrl-apks-projects.vercel.app', // second Vercel frontend
-];
-
+// Middleware
 app.use(cors({
-  origin: function(origin, callback){
-    // allow requests with no origin like mobile apps or curl
-    if(!origin) return callback(null, true);
-    if(allowedOrigins.indexOf(origin) === -1){
-      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
+  origin: [
+    'http://localhost:3000', // local dev
+    'https://nutri-scan-ashen.vercel.app', // deployed frontend
+    'https://nutri-scan-git-master-ctrl-apks-projects.vercel.app' // alternate URL
+  ],
   credentials: true,
 }));
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Create uploads directory
+// Uploads folder
 const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('✓ Uploads directory created');
-}
-
-// Serve uploaded files
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 app.use('/uploads', express.static(uploadsDir));
 
-// Request logging
+// Request logging for dev
 if (process.env.NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
     next();
   });
 }
+
+// Root route
+app.get('/', (req, res) => {
+  res.send('NutriScan Backend is alive!');
+});
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -77,31 +64,9 @@ app.use('/api/report', reportRoutes);
 app.use('/api/nutrition', nutritionRoutes);
 app.use('/api/ai', aiRoutes);
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'success',
-    message: 'NutriScan 2.0 API Running',
-    version: '2.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    features: {
-      authentication: true,
-      scanning: true,
-      aiPowered: aiConfigured,
-      nutritionTracking: true,
-      communityReports: true,
-    },
-    aiProvider: aiConfigured ? 'Google Gemini' : 'Not configured',
-    timestamp: new Date().toISOString(),
-  });
-});
-
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({
-    message: 'Route not found',
-    path: req.path,
-  });
+  res.status(404).json({ message: 'Route not found', path: req.path });
 });
 
 // Error handler
@@ -114,26 +79,9 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
-  console.log(`
-╔════════════════════════════════════════════════╗
-║                                                ║
-║   🚀 NutriScan 2.0 Production Server          ║
-║                                                ║
-║   Port: ${PORT}                                   ║
-║   Environment: ${process.env.NODE_ENV || 'development'}                    ║
-║   AI: ${aiConfigured ? 'Google Gemini ✓' : 'Not Configured ⚠️'}           ║
-║   Database: ${process.env.MONGO_URI ? 'MongoDB Atlas ✓' : 'Not Connected ⚠️'}      ║
-║                                                ║
-║   Status: Server Running 🟢                    ║
-║                                                ║
-╚════════════════════════════════════════════════╝
-  `);
-  
-  if (!aiConfigured) {
-    console.log('\n⚠️  AI Features Disabled: Add GEMINI_API_KEY to .env\n');
-  }
+  console.log(`NutriScan Backend running on port ${PORT}`);
+  if (!aiConfigured) console.log('⚠️  AI Features Disabled: Add GEMINI_API_KEY to .env');
 });
 
 export default app;
