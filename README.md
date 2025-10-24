@@ -46,7 +46,7 @@ Ever stood in a grocery store trying to pronounce "Butylated Hydroxyanisole" whi
 
 ```bash
 # 1. Grab the goods
-git clone https://github.com/yourusername/nutriscan-2.0.git
+git clone https://github.com/yourusername/NutriScan.git
 cd nutriscan-2.0
 
 # 2. Backend (the smart one)
